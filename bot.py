@@ -1,5 +1,5 @@
 from telegram import Update
-from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, filters, ConversationHandler
+from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, CommandHandler, filters, ConversationHandler
 import firebase_admin
 from firebase_admin import credentials, firestore
 import os, json
@@ -13,7 +13,6 @@ db = firestore.client()
 EMAIL, NUMBER = range(2)
 user_data = {}
 
-# Jab user koi bhi message bheje, email maango
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Apna email bheje.")
     return EMAIL
@@ -29,7 +28,6 @@ async def get_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Data save ho gaya. Shukriya!")
     return ConversationHandler.END
 
-# Cancel command (optional)
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Cancel kar diya gaya.")
     return ConversationHandler.END
@@ -37,14 +35,13 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # App run
 app = ApplicationBuilder().token(os.getenv("BOT_TOKEN")).build()
 
-# Bot conversation handle karega bina command ke
 conv_handler = ConversationHandler(
-    entry_points=[MessageHandler(filters.TEXT & ~filters.COMMAND, start)],
+    entry_points=[CommandHandler("start", start)],
     states={
         EMAIL: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_email)],
         NUMBER: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_number)],
     },
-    fallbacks=[MessageHandler(filters.COMMAND, cancel)]
+    fallbacks=[CommandHandler("cancel", cancel)]
 )
 
 app.add_handler(conv_handler)
